@@ -541,6 +541,23 @@ mod _os {
     }
 
     #[pyfunction]
+    fn getenv(
+        key: PyStrRef,
+        default: OptionalArg<PyStrRef>,
+        vm: &VirtualMachine,
+    ) -> Option<PyStrRef> {
+        let key: &ffi::OsStr = key.borrow_value().as_ref();
+        let default: Option<PyStrRef> = match default {
+            OptionalArg::Present(val) => Some(val),
+            OptionalArg::Missing => None,
+        };
+        match env::var(key) {
+            Ok(val) => Some(val),
+            Err(e) => default
+        }
+    }
+
+    #[pyfunction]
     fn unsetenv(key: Either<PyStrRef, PyBytesRef>, vm: &VirtualMachine) -> PyResult<()> {
         let key: &ffi::OsStr = match key {
             Either::A(ref s) => s.borrow_value().as_ref(),
